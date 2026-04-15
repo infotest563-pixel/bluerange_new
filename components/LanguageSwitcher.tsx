@@ -110,14 +110,8 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
     // Check if translation exists in target language
     if (activeTranslations && activeTranslations[langCode]) {
       const translatedSlug = activeTranslations[langCode].slug;
-      // Navigate to translated slug if available
-      if (langCode === 'en') {
-        // English pages use /[slug] pattern (no language prefix)
-        router.push(`/${translatedSlug}`);
-      } else {
-        // Other languages use /[lang]/[slug] pattern
-        router.push(`/${langCode}/${translatedSlug}`);
-      }
+      // Navigate to translated slug - all languages use /[lang]/[slug] pattern
+      router.push(`/${langCode}/${translatedSlug}`);
     } else {
       // Fall back to homepage if translation unavailable
       if (langCode === 'en') {
