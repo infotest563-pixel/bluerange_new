@@ -2,6 +2,10 @@ import { getPageBySlug, getPostBySlug, getSettings } from '../../lib/wp';
 import { redirect, notFound } from 'next/navigation';
 import WordPressPageRenderer from '../../components/pages/WordPressPageRenderer';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
 

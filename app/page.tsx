@@ -1,6 +1,10 @@
 import { getSettings, getPageById } from '../lib/wp';
 import DesignedHomepage from '../components/DesignedHomepage';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Home() {
   try {
     // Fetch English settings

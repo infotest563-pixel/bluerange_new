@@ -2,6 +2,10 @@ import { getSettings, getPageById } from '../../lib/wp';
 import DesignedHomepage from '../../components/DesignedHomepage';
 import { notFound } from 'next/navigation';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function SwedishHome() {
   try {
     // Fetch Swedish settings
