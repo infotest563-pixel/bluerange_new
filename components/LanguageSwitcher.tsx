@@ -27,13 +27,64 @@ interface LanguageSwitcherProps {
 
 export default function LanguageSwitcher({ languages, currentPageId, translations }: LanguageSwitcherProps) {
   const [open, setOpen] = useState(false);
+  const [fetchedTranslations, setFetchedTranslations] = useState<TranslationMap | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   
-  // Detect current language from pathname or default to 'en'
+  // Detect current language and slug from pathname
   const currentLangCode = pathname?.startsWith('/sv') ? 'sv' : 'en';
   const current = languages.find(lang => lang.code === currentLangCode) || languages[0];
+  
+  // Extract slug from pathname
+  const getSlugFromPathname = () => {
+    if (!pathname) return null;
+    
+    // Handle root paths (homepages)
+    if (pathname === '/' || pathname === '/sv') return null;
+    
+    // Handle /[lang]/[slug] pattern
+    const langMatch = pathname.match(/^\/(en|sv)\/([^/]+)/);
+    if (langMatch) return langMatch[2];
+    
+    // Handle /[slug] pattern (English pages without lang prefix)
+    const slugMatch = pathname.match(/^\/([^/]+)/);
+    if (slugMatch) return slugMatch[1];
+    
+    return null;
+  };
+  
+  const currentSlug = getSlugFromPathname();
 
+  // Fetch translations when slug is available and translations not provided
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      if (currentSlug && !translations && !fetchedTranslations && !isLoading) {
+        setIsLoading(true);
+        try {
+          // Fetch page by slug to get its ID and translations
+          const res = await fetch(
+            `https://dev-bluerange.pantheonsite.io/wp-json/wp/v2/pages?slug=${currentSlug}&lang=${currentLangCode}&_fields=id,polylang_translations`,
+            { cache: 'no-store' }
+          );
+          
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data[0] && data[0].polylang_translations) {
+              setFetchedTranslations(data[0].polylang_translations);
+            }
+          }
+        } catch (error) {
+          console.error('[LanguageSwitcher] Failed to fetch translations:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    fetchTranslations();
+  }, [currentSlug, currentLangCode, translations, fetchedTranslations, isLoading]);
+  
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -49,13 +100,16 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
     }
   }, [open]);
 
-  const handleLanguageSwitch = (e: React.MouseEvent<HTMLAnchorElement>, langCode: string) => {
+  const handleLanguageSwitch = async (e: React.MouseEvent<HTMLAnchorElement>, langCode: string) => {
     e.preventDefault();
     setOpen(false);
     
-    // Check if translation exists in target language using translations prop
-    if (translations && translations[langCode]) {
-      const translatedSlug = translations[langCode].slug;
+    // Use provided translations or fetched translations
+    const activeTranslations = translations || fetchedTranslations;
+    
+    // Check if translation exists in target language
+    if (activeTranslations && activeTranslations[langCode]) {
+      const translatedSlug = activeTranslations[langCode].slug;
       // Navigate to translated slug if available
       if (langCode === 'en') {
         // English pages use /[slug] pattern (no language prefix)
