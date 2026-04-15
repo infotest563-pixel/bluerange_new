@@ -100,7 +100,7 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
     }
   }, [open]);
 
-  const handleLanguageSwitch = async (e: React.MouseEvent<HTMLAnchorElement>, langCode: string) => {
+  const handleLanguageSwitch = (e: React.MouseEvent<HTMLAnchorElement>, langCode: string) => {
     e.preventDefault();
     setOpen(false);
     
@@ -110,8 +110,14 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
     // Check if translation exists in target language
     if (activeTranslations && activeTranslations[langCode]) {
       const translatedSlug = activeTranslations[langCode].slug;
-      // Navigate to translated slug - all languages use /[lang]/[slug] pattern
-      router.push(`/${langCode}/${translatedSlug}`);
+      
+      // Navigate to translated slug
+      // English uses /[slug] pattern, other languages use /[lang]/[slug]
+      if (langCode === 'en') {
+        router.push(`/${translatedSlug}`);
+      } else {
+        router.push(`/${langCode}/${translatedSlug}`);
+      }
     } else {
       // Fall back to homepage if translation unavailable
       if (langCode === 'en') {
