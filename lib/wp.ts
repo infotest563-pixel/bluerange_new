@@ -1,13 +1,23 @@
 const WP = 'https://dev-bluerange.pantheonsite.io';
 
+// TypeScript interfaces
+export interface TranslationMap {
+    [langCode: string]: {
+        id: number;
+        slug: string;
+        href: string;
+    };
+}
+
 export async function getSettings(lang: string = 'en') {
     const url = `${WP}/wp-json/headless/v1/site-settings?lang=${lang}`;
     const res = await fetch(url, {
-        next: { revalidate: 60 },
+        cache: 'no-store',
+        next: { revalidate: 0 },
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
         }
-    });
+    } as RequestInit);
 
     if (!res.ok) {
         console.error(`[getSettings] Failed: ${res.status} ${res.statusText}`);
@@ -30,13 +40,14 @@ export async function getSite(lang: string = 'en') {
 
     try {
         const res = await fetch(url, {
-            next: { revalidate: 3600 }, // Cache site info longer
+            cache: 'no-store',
+            next: { revalidate: 0 },
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
-        });
+        } as RequestInit);
 
         if (!res.ok) {
             return { name: 'Bluerange', description: '' };
@@ -50,29 +61,83 @@ export async function getSite(lang: string = 'en') {
 }
 
 
-export async function getPageById(id: number) {
-    return fetch(`${WP}/wp-json/wp/v2/pages/${id}?_embed&lang=en&acf_format=standard`, { next: { revalidate: 60 } }).then(r => r.json());
+export async function getPageById(id: number, lang: string = 'en') {
+    return fetch(`${WP}/wp-json/wp/v2/pages/${id}?lang=${lang}&_embed&acf_format=standard`, { 
+        cache: 'no-store',
+        next: { revalidate: 0 } 
+    } as RequestInit).then(r => r.json());
 }
 
 export async function getMedia(id: number) {
-    return fetch(`${WP}/wp-json/wp/v2/media/${id}?lang=en`, { next: { revalidate: 3600 } }).then(r => r.json());
+    return fetch(`${WP}/wp-json/wp/v2/media/${id}?lang=en`, { next: { revalidate: 3600 } } as RequestInit).then(r => r.json());
 }
 
-export async function getPageBySlug(slug: string) {
-    const res = await fetch(`${WP}/wp-json/wp/v2/pages?slug=${slug}&_embed&lang=en&acf_format=standard`, { next: { revalidate: 60 } });
-    const data = await res.json();
-    return data[0] || null;
+export async function getPage(slug: string, lang: string = 'en') {
+    try {
+        const res = await fetch(`${WP}/wp-json/wp/v2/pages?slug=${slug}&lang=${lang}&_embed&acf_format=standard`, { 
+            cache: 'no-store',
+            next: { revalidate: 0 } 
+        } as RequestInit);
+        
+        if (!res.ok) {
+            console.error(`[getPage] Failed: ${res.status} ${res.statusText}`);
+            return null;
+        }
+        
+        const data = await res.json();
+        return data[0] || null;
+    } catch (error) {
+        console.error(`[getPage] Network error:`, error);
+        return null;
+    }
 }
 
-export async function getPostBySlug(slug: string) {
-    const res = await fetch(`${WP}/wp-json/wp/v2/posts?slug=${slug}&_embed&lang=en&acf_format=standard`, { next: { revalidate: 60 } });
+export async function getPageBySlug(slug: string, lang: string = 'en') {
+    return getPage(slug, lang);
+}
+
+export async function getTranslations(pageId: number, lang: string = 'en'): Promise<TranslationMap> {
+    try {
+        const res = await fetch(`${WP}/wp-json/wp/v2/pages/${pageId}?lang=${lang}&_embed&acf_format=standard`, {
+            cache: 'no-store',
+            next: { revalidate: 0 }
+        } as RequestInit);
+
+        if (!res.ok) {
+            console.error(`[getTranslations] Failed: ${res.status} ${res.statusText}`);
+            return {};
+        }
+
+        const data = await res.json();
+
+        // Check if Polylang translation data exists
+        if (!data.polylang_translations) {
+            console.warn(`[getTranslations] No Polylang translation data found for page ${pageId}`);
+            return {};
+        }
+
+        return data.polylang_translations;
+    } catch (error) {
+        console.error(`[getTranslations] Network error:`, error);
+        return {};
+    }
+}
+
+export async function getPostBySlug(slug: string, lang: string = 'en') {
+    const res = await fetch(`${WP}/wp-json/wp/v2/posts?slug=${slug}&lang=${lang}&_embed&acf_format=standard`, { 
+        cache: 'no-store',
+        next: { revalidate: 0 } 
+    } as RequestInit);
     const data = await res.json();
     return data[0] || null;
 }
 
 export async function getMenu(slug: string, lang: string = 'en') {
     try {
-        const res = await fetch(`${WP}/wp-json/headless/v1/menus/${slug}?lang=${lang}`, { next: { revalidate: 300 } });
+        const res = await fetch(`${WP}/wp-json/headless/v1/menus/${slug}?lang=${lang}`, { 
+            cache: 'no-store',
+            next: { revalidate: 0 } 
+        } as RequestInit);
         if (!res.ok) return [];
         const data = await res.json();
         return Array.isArray(data) ? data : [];
@@ -90,7 +155,7 @@ export async function renderShortcode(code: string) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code }),
             next: { revalidate: 60 }
-        });
+        } as RequestInit);
 
         if (!res.ok) return '';
 
@@ -107,10 +172,17 @@ export async function renderShortcode(code: string) {
     }
 }
 
-export async function getLanguages() {
-    // Return static language data for now
-    // TODO: Integrate with WordPress Polylang API when available
-    return [
+export interface Language {
+    code: string;
+    name: string;
+    url: string;
+    flag: string;
+    slug?: string;
+}
+
+export async function getLanguages(): Promise<Language[]> {
+    // Static fallback data
+    const fallbackLanguages: Language[] = [
         { 
             code: 'sv', 
             name: 'Svenska', 
@@ -124,4 +196,45 @@ export async function getLanguages() {
             flag: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAMAAABBPP0LAAAAt1BMVEWSmb66z+18msdig8La3u+tYX9IaLc7W7BagbmcUW+kqMr/q6n+//+hsNv/lIr/jIGMnNLJyOP9/fyQttT/wb3/////aWn+YWF5kNT0oqz0i4ueqtIZNJjhvt/8gn//WVr/6+rN1+o9RKZwgcMPJpX/VFT9UEn+RUX8Ozv2Ly+FGzdYZrfU1e/8LS/lQkG/mbVUX60AE231hHtcdMb0mp3qYFTFwNu3w9prcqSURGNDaaIUMX5FNW5wYt7AAAAAjklEQVR4AR3HNUJEMQCGwf+L8RR36ajR+1+CEuvRdd8kK9MNAiRQNgJmVDAt1yM6kSzYVJUsPNssAk5N7ZFKjVNFAY4co6TAOI+kyQm+LFUEBEKKzuWUNB7rSH/rSnvOulOGk+QlXTBqMIrfYX4tSe2nP3iRa/KNK7uTmWJ5a9+erZ3d+18od4ytiZdvZyuKWy8o3UpTVAAAAABJRU5ErkJggg==' 
         }
     ];
+
+    try {
+        const url = `${WP}/wp-json/polylang/v1/languages`;
+        const res = await fetch(url, {
+            cache: 'no-store',
+            next: { revalidate: 0 }
+        } as RequestInit);
+
+        if (!res.ok) {
+            console.warn(`[getLanguages] Polylang API returned ${res.status}, using fallback data`);
+            return fallbackLanguages;
+        }
+
+        const data = await res.json();
+        
+        // Validate that we received an array
+        if (!Array.isArray(data)) {
+            console.warn(`[getLanguages] Polylang API returned non-array data, using fallback`);
+            return fallbackLanguages;
+        }
+
+        // Map Polylang API response to our Language interface
+        const languages: Language[] = data.map((lang: any) => ({
+            code: lang.code || lang.slug || '',
+            name: lang.name || '',
+            url: lang.url || lang.home_url || '',
+            flag: lang.flag || lang.flag_url || '',
+            slug: lang.slug
+        }));
+
+        // Return fallback if no valid languages were returned
+        if (languages.length === 0) {
+            console.warn(`[getLanguages] No languages returned from Polylang API, using fallback`);
+            return fallbackLanguages;
+        }
+
+        return languages;
+    } catch (error) {
+        console.error(`[getLanguages] Error fetching from Polylang API:`, error);
+        return fallbackLanguages;
+    }
 }
