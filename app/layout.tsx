@@ -4,6 +4,10 @@ import Script from 'next/script';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+// Force dynamic rendering for all pages
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
