@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 interface Language {
@@ -29,15 +29,21 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
   const [open, setOpen] = useState(false);
   const [fetchedTranslations, setFetchedTranslations] = useState<TranslationMap | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  
+  // Ensure component is mounted before rendering interactive elements
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Detect current language and slug from pathname
   const currentLangCode = pathname?.startsWith('/sv') ? 'sv' : 'en';
   const current = languages.find(lang => lang.code === currentLangCode) || languages[0];
   
   // Extract slug from pathname
-  const getSlugFromPathname = () => {
+  const getSlugFromPathname = useCallback(() => {
     if (!pathname) return null;
     
     // Handle root paths (homepages)
@@ -52,12 +58,14 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
     if (slugMatch) return slugMatch[1];
     
     return null;
-  };
+  }, [pathname]);
   
   const currentSlug = getSlugFromPathname();
 
   // Fetch translations when slug is available and translations not provided
   useEffect(() => {
+    if (!isMounted) return;
+    
     const fetchTranslations = async () => {
       if (currentSlug && !translations && !fetchedTranslations && !isLoading) {
         setIsLoading(true);
@@ -83,10 +91,12 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
     };
     
     fetchTranslations();
-  }, [currentSlug, currentLangCode, translations, fetchedTranslations, isLoading]);
+  }, [currentSlug, currentLangCode, translations, fetchedTranslations, isLoading, isMounted]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isMounted) return;
+    
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('.lang-switcher')) {
@@ -98,14 +108,18 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [open]);
+  }, [open, isMounted]);
 
-  const handleLanguageSwitch = (e: React.MouseEvent<HTMLAnchorElement>, langCode: string) => {
+  const handleLanguageSwitch = useCallback((e: React.MouseEvent<HTMLAnchorElement>, langCode: string) => {
     e.preventDefault();
+    e.stopPropagation();
     setOpen(false);
     
     // Use provided translations or fetched translations
     const activeTranslations = translations || fetchedTranslations;
+    
+    // Build the target URL
+    let targetUrl: string;
     
     // Check if translation exists in target language
     if (activeTranslations && activeTranslations[langCode]) {
@@ -114,21 +128,22 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
       // Navigate to translated slug
       // English uses /[slug] pattern, other languages use /[lang]/[slug]
       if (langCode === 'en') {
-        router.push(`/${translatedSlug}`);
+        targetUrl = `/${translatedSlug}`;
       } else {
-        router.push(`/${langCode}/${translatedSlug}`);
+        targetUrl = `/${langCode}/${translatedSlug}`;
       }
     } else {
       // Fall back to homepage if translation unavailable
-      if (langCode === 'en') {
-        router.push('/');
-      } else {
-        router.push(`/${langCode}`);
-      }
+      targetUrl = langCode === 'en' ? '/' : `/${langCode}`;
     }
-  };
+    
+    // Use window.location for more reliable navigation on Vercel
+    // This ensures the page fully reloads with the new language
+    window.location.href = targetUrl;
+  }, [translations, fetchedTranslations]);
 
-  if (!languages || languages.length === 0) {
+  // Don't render until mounted to avoid hydration issues
+  if (!isMounted || !languages || languages.length === 0) {
     return null;
   }
 
