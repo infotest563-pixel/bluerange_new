@@ -8,7 +8,7 @@ export default async function SwedishHome() {
     return <h1>WordPress Front Page not configured</h1>;
   }
 
-  const page = await getPageById(settings.page_on_front);
+  const page = await getPageById(settings.page_on_front, 'sv');
 
   if (!page || !page.acf) {
     return <h1>ACF data missing on homepage</h1>;

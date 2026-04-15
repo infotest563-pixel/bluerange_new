@@ -6,24 +6,24 @@ This implementation adds multilingual content support to the Next.js application
 
 ## Tasks
 
-- [ ] 1. Update WordPress API client with language parameter support
+- [~] 1. Update WordPress API client with language parameter support
   - [x] 1.1 Add language parameter to all existing API functions
     - Modify `getSettings`, `getSite`, `getMenu`, `getPageById`, `getPageBySlug`, `getPostBySlug` to accept `lang` parameter with default value 'en'
     - Append `?lang={lang}` query parameter to all API URLs
     - Update cache configuration to `cache: 'no-store'` and `next: { revalidate: 0 }` for all fetch calls
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2, 4.3_
   
-  - [ ]* 1.2 Write property test for API URL construction
+  - [~] 1.2 Write property test for API URL construction
     - **Property 1: API URL Construction with Language Parameters**
     - **Validates: Requirements 1.1, 1.4, 3.4, 3.5, 6.2, 8.1**
     - Test that all API URLs include `lang` parameter, `_embed`, and `acf_format=standard`
   
-  - [ ]* 1.3 Write property test for cache configuration
+  - [~] 1.3 Write property test for cache configuration
     - **Property 5: Cache Configuration**
     - **Validates: Requirements 4.1, 4.2**
     - Test that all fetch requests use `cache: 'no-store'` and `revalidate: 0`
 
-- [ ] 2. Implement new content fetching functions
+- [~] 2. Implement new content fetching functions
   - [x] 2.1 Create `getPage(slug, lang)` function
     - Write function that fetches page by slug with language parameter
     - Include `_embed` and `acf_format=standard` in query parameters
@@ -37,30 +37,30 @@ This implementation adds multilingual content support to the Next.js application
     - Handle missing Polylang data gracefully
     - _Requirements: 5.3, 7.2, 7.3_
   
-  - [-] 2.3 Update `getLanguages()` function
+  - [x] 2.3 Update `getLanguages()` function
     - Replace static language data with Polylang API integration
     - Fetch from `/wp-json/polylang/v1/languages` endpoint
     - Fall back to static data if Polylang API unavailable
     - _Requirements: 5.1, 7.1, 7.4, 7.5_
   
-  - [ ]* 2.4 Write property test for invalid slug handling
+  - [~] 2.4 Write property test for invalid slug handling
     - **Property 4: Invalid Slug Handling**
     - **Validates: Requirements 3.3, 10.1**
     - Test that getPage returns null for non-existent slugs without throwing errors
   
-  - [ ]* 2.5 Write property test for language-specific content retrieval
+  - [~] 2.5 Write property test for language-specific content retrieval
     - **Property 2: Language-Specific Content Retrieval**
     - **Validates: Requirements 2.2**
     - Test that fetched content corresponds to requested language
   
-  - [ ]* 2.6 Write unit tests for getPage function
+  - [~] 2.6 Write unit tests for getPage function
     - Test successful page fetch with ACF fields
     - Test 404 handling
     - Test network error handling
     - _Requirements: 3.1, 3.2, 3.3, 10.2_
 
-- [ ] 3. Create dynamic language route handler
-  - [~] 3.1 Create `/app/[lang]/[slug]/page.tsx` route file
+- [~] 3. Create dynamic language route handler
+  - [x] 3.1 Create `/app/[lang]/[slug]/page.tsx` route file
     - Implement async page component accepting `params: Promise<{ lang: string; slug: string }>`
     - Validate language code against supported languages ['en', 'sv']
     - Call `getPage(slug, lang)` to fetch content
@@ -69,27 +69,27 @@ This implementation adds multilingual content support to the Next.js application
     - Render page using `WordPressPageRenderer` component
     - _Requirements: 2.1, 2.2, 2.3, 9.3, 9.4, 10.1_
   
-  - [ ]* 3.2 Write unit tests for language route handler
+  - [~] 3.2 Write unit tests for language route handler
     - Test valid language codes (en, sv)
     - Test invalid language codes return 404
     - Test missing pages return 404
     - Test homepage redirect prevention
     - _Requirements: 2.1, 2.2, 2.3, 9.4, 10.1_
 
-- [ ] 4. Update homepage routes for language support
-  - [~] 4.1 Update `/app/page.tsx` for English homepage
+- [~] 4. Update homepage routes for language support
+  - [x] 4.1 Update `/app/page.tsx` for English homepage
     - Ensure all API calls pass `lang='en'` parameter
     - Fetch settings with `getSettings('en')`
     - Fetch homepage content with language parameter
     - _Requirements: 2.4, 9.1, 9.5_
   
-  - [~] 4.2 Update `/app/sv/page.tsx` for Swedish homepage
+  - [x] 4.2 Update `/app/sv/page.tsx` for Swedish homepage
     - Fetch settings with `getSettings('sv')`
     - Fetch Swedish homepage using `page_on_front` setting
     - Render using `DesignedHomepage` component
     - _Requirements: 2.5, 9.2, 9.5_
   
-  - [ ]* 4.3 Write unit tests for homepage routes
+  - [~] 4.3 Write unit tests for homepage routes
     - Test English homepage serves correct content
     - Test Swedish homepage serves correct content
     - Test ACF fields render correctly for each language
@@ -99,7 +99,7 @@ This implementation adds multilingual content support to the Next.js application
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Enhance Language Switcher component
-  - [~] 6.1 Add translation metadata support to LanguageSwitcher
+  - [x] 6.1 Add translation metadata support to LanguageSwitcher
     - Update `LanguageSwitcherProps` interface to include `currentPageId` and `translations`
     - Implement `handleLanguageSwitch` function with slug mapping logic
     - Check if translation exists in target language using `translations` prop
@@ -107,7 +107,7 @@ This implementation adds multilingual content support to the Next.js application
     - Fall back to homepage if translation unavailable: `/` for English, `/sv` for Swedish
     - _Requirements: 5.2, 5.4, 5.5, 7.3_
   
-  - [~] 6.2 Add visual indicator for active language
+  - [-] 6.2 Add visual indicator for active language
     - Highlight current language option with background color
     - Update styling to show active state
     - _Requirements: 5.6_
@@ -164,13 +164,13 @@ This implementation adds multilingual content support to the Next.js application
     - **Validates: Requirements 6.5, 10.3**
     - Test that pages without ACF fields render without errors
   
-  - [ ]* 8.5 Write unit tests for ACF field handling
+  - [~] 8.5 Write unit tests for ACF field handling
     - Test ACF fields are accessible via `page.acf`
     - Test missing ACF fields don't crash
     - Test media ID resolution
     - _Requirements: 6.1, 6.3, 6.4, 6.5_
 
-- [ ] 9. Implement menu localization
+- [~] 9. Implement menu localization
   - [~] 9.1 Update menu fetching to use language parameter
     - Ensure `getMenu(slug, lang)` is called with current page language
     - Update all menu fetch calls in layout components
@@ -181,17 +181,17 @@ This implementation adds multilingual content support to the Next.js application
     - Handle empty menu responses gracefully
     - _Requirements: 8.3, 8.5_
   
-  - [ ]* 9.3 Write property test for menu language parameter
+  - [ ] 9.3 Write property test for menu language parameter
     - **Property 12: Menu Language Parameter**
     - **Validates: Requirements 8.1**
     - Test that menu URLs include correct `lang` parameter
   
-  - [ ]* 9.4 Write property test for menu translation fallback
+  - [ ] 9.4 Write property test for menu translation fallback
     - **Property 13: Menu Translation Fallback**
     - **Validates: Requirements 8.5**
     - Test that missing menu translations fall back to English
   
-  - [ ]* 9.5 Write unit tests for menu localization
+  - [~] 9.5 Write unit tests for menu localization
     - Test menu fetches with language parameter
     - Test menu displays in correct language
     - Test fallback to English menu
@@ -217,17 +217,17 @@ This implementation adds multilingual content support to the Next.js application
     - Display user-friendly error messages
     - _Requirements: 10.4, 10.5_
   
-  - [ ]* 10.4 Write property test for API unreachable error handling
+  - [~] 10.4 Write property test for API unreachable error handling
     - **Property 15: API Unreachable Error Handling**
     - **Validates: Requirements 10.2**
     - Test that network failures return null without crashing
   
-  - [ ]* 10.5 Write property test for language switcher error handling
+  - [~] 10.5 Write property test for language switcher error handling
     - **Property 16: Language Switcher Error Handling**
     - **Validates: Requirements 10.4**
     - Test that navigation errors are handled gracefully
   
-  - [ ]* 10.6 Write unit tests for error handling
+  - [~] 10.6 Write unit tests for error handling
     - Test 404 responses
     - Test network timeouts
     - Test malformed API responses
@@ -235,7 +235,7 @@ This implementation adds multilingual content support to the Next.js application
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
 - [ ] 11. Add TypeScript interfaces and type definitions
-  - [~] 11.1 Create type definitions for WordPress API responses
+  - [x] 11.1 Create type definitions for WordPress API responses
     - Define `WordPressPage` interface with ACF and Polylang fields
     - Define `Language` interface
     - Define `TranslationMap` interface
@@ -243,7 +243,7 @@ This implementation adds multilingual content support to the Next.js application
     - Add types to lib/wp.ts
     - _Requirements: All requirements (type safety)_
   
-  - [~] 11.2 Create language configuration constants
+  - [x] 11.2 Create language configuration constants
     - Define `SUPPORTED_LANGUAGES` constant array
     - Define `LANGUAGE_CONFIG` object with name, flag, and homePath
     - Export from lib/wp.ts or separate config file

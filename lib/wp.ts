@@ -9,6 +9,46 @@ export interface TranslationMap {
     };
 }
 
+export interface Language {
+    code: string;
+    name: string;
+    url: string;
+    flag: string;
+    slug?: string;
+}
+
+export interface WordPressPage {
+    id: number;
+    slug: string;
+    title: { rendered: string };
+    content: { rendered: string };
+    acf?: Record<string, any>;
+    _embedded?: {
+        'wp:featuredmedia'?: Array<{ source_url: string }>;
+    };
+    polylang_translations?: TranslationMap;
+}
+
+export const SUPPORTED_LANGUAGES = ['en', 'sv'] as const;
+export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+
+export const LANGUAGE_CONFIG: Record<SupportedLanguage, {
+    name: string;
+    flag: string;
+    homePath: string;
+}> = {
+    en: {
+        name: 'English',
+        flag: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAMAAABBPP0LAAAAt1BMVEWSmb66z+18msdig8La3u+tYX9IaLc7W7BagbmcUW+kqMr/q6n+//+hsNv/lIr/jIGMnNLJyOP9/fyQttT/wb3/////aWn+YWF5kNT0oqz0i4ueqtIZNJjhvt/8gn//WVr/6+rN1+o9RKZwgcMPJpX/VFT9UEn+RUX8Ozv2Ly+FGzdYZrfU1e/8LS/lQkG/mbVUX60AE231hHtcdMb0mp3qYFTFwNu3w9prcqSURGNDaaIUMX5FNW5wYt7AAAAAjklEQVR4AR3HNUJEMQCGwf+L8RR36ajR+1+CEuvRdd8kK9MNAiRQNgJmVDAt1yM6kSzYVJUsPNssAk5N7ZFKjVNFAY4co6TAOI+kyQm+LFUEBEKKzuWUNB7rSH/rSnvOulOGk+QlXTBqMIrfYX4tSe2nP3iRa/KNK7uTmWJ5a9+erZ3d+18od4ytiZdvZyuKWy8o3UpTVAAAAABJRU5ErkJggg==',
+        homePath: '/'
+    },
+    sv: {
+        name: 'Svenska',
+        flag: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAMAAABBPP0LAAAAXVBMVEUAP4H9wAAAKnQAHmsAEF8AB1QAAEd7sct5r8r+5HX943BopcNcnr9Qlrf93VFBjbI2hq0rfqgAADf72UcieqT51jn40i72ziL0yxTmiwD00DQUcKEMaJsAABztngB+lbt6AAAAVklEQVR4AUXHBWEDQABD0fcPhgrmX+KYuW04QXRgzpUi8ZzzbfA5JB9zCDZpTlYNtgtJrQHb+Pv/6/SxqrczvU7nct8I8ve5XnrveXvzJqaW3HDHNfgCGFkLqHdB0OIAAAAASUVORK5CYII=',
+        homePath: '/sv'
+    }
+};
+
 export async function getSettings(lang: string = 'en') {
     const url = `${WP}/wp-json/headless/v1/site-settings?lang=${lang}`;
     const res = await fetch(url, {

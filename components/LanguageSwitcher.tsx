@@ -11,11 +11,21 @@ interface Language {
   slug?: string;
 }
 
-interface LanguageSwitcherProps {
-  languages: Language[];
+interface TranslationMap {
+  [langCode: string]: {
+    id: number;
+    slug: string;
+    href: string;
+  };
 }
 
-export default function LanguageSwitcher({ languages }: LanguageSwitcherProps) {
+interface LanguageSwitcherProps {
+  languages: Language[];
+  currentPageId?: number;
+  translations?: TranslationMap;
+}
+
+export default function LanguageSwitcher({ languages, currentPageId, translations }: LanguageSwitcherProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -43,11 +53,24 @@ export default function LanguageSwitcher({ languages }: LanguageSwitcherProps) {
     e.preventDefault();
     setOpen(false);
     
-    // Switch language on localhost
-    if (langCode === 'sv') {
-      router.push('/sv');
+    // Check if translation exists in target language using translations prop
+    if (translations && translations[langCode]) {
+      const translatedSlug = translations[langCode].slug;
+      // Navigate to translated slug if available
+      if (langCode === 'en') {
+        // English pages use /[slug] pattern (no language prefix)
+        router.push(`/${translatedSlug}`);
+      } else {
+        // Other languages use /[lang]/[slug] pattern
+        router.push(`/${langCode}/${translatedSlug}`);
+      }
     } else {
-      router.push('/');
+      // Fall back to homepage if translation unavailable
+      if (langCode === 'en') {
+        router.push('/');
+      } else {
+        router.push(`/${langCode}`);
+      }
     }
   };
 
