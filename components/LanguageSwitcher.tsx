@@ -118,39 +118,48 @@ export default function LanguageSwitcher({ languages, currentPageId, translation
             marginTop: '4px',
           }}
         >
-          {languages.map((lang, index) => (
-            <a
-              key={lang.code}
-              href="#"
-              onClick={(e) => handleLanguageSwitch(e, lang.code)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 12px',
-                textDecoration: 'none',
-                color: '#333',
-                fontSize: '14px',
-                borderBottom: index < languages.length - 1 ? '1px solid #f0f0f0' : 'none',
-                background: lang.code === currentLangCode ? '#f5f5f5' : 'transparent',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-              onMouseLeave={(e) => {
-                if (lang.code !== currentLangCode) {
-                  e.currentTarget.style.background = 'transparent';
-                }
-              }}
-            >
-              <img 
-                src={lang.flag} 
-                alt={lang.name} 
-                width={16} 
-                height={11} 
-                style={{ width: '16px', height: '11px' }} 
-              />
-              {lang.name}
-            </a>
-          ))}
+          {languages.map((lang, index) => {
+            const isActive = lang.code === currentLangCode;
+            return (
+              <a
+                key={lang.code}
+                href="#"
+                onClick={(e) => handleLanguageSwitch(e, lang.code)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 12px',
+                  textDecoration: 'none',
+                  color: isActive ? '#0066cc' : '#333',
+                  fontSize: '14px',
+                  fontWeight: isActive ? '600' : '400',
+                  borderBottom: index < languages.length - 1 ? '1px solid #f0f0f0' : 'none',
+                  background: isActive ? '#e6f2ff' : 'transparent',
+                  borderLeft: isActive ? '3px solid #0066cc' : '3px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = '#f5f5f5';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                <img 
+                  src={lang.flag} 
+                  alt={lang.name} 
+                  width={16} 
+                  height={11} 
+                  style={{ width: '16px', height: '11px' }} 
+                />
+                {lang.name}
+              </a>
+            );
+          })}
         </div>
       )}
     </div>
