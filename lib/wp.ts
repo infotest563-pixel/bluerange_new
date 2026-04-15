@@ -50,29 +50,38 @@ export const LANGUAGE_CONFIG: Record<SupportedLanguage, {
 };
 
 export async function getSettings(lang: string = 'en') {
-    const url = `${WP}/wp-json/headless/v1/site-settings?lang=${lang}`;
-    const res = await fetch(url, {
-        cache: 'no-store',
-        next: { revalidate: 0 },
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-        }
-    } as RequestInit);
+    try {
+        const url = `${WP}/wp-json/headless/v1/site-settings?lang=${lang}`;
+        console.log(`[getSettings] Fetching: ${url}`);
+        
+        const res = await fetch(url, {
+            cache: 'no-store',
+            next: { revalidate: 0 },
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            }
+        } as RequestInit);
 
-    if (!res.ok) {
-        console.error(`[getSettings] Failed: ${res.status} ${res.statusText}`);
+        if (!res.ok) {
+            console.error(`[getSettings] Failed: ${res.status} ${res.statusText}`);
+            return {};
+        }
+
+        const data = await res.json();
+        console.log(`[getSettings] Success for lang ${lang}, page_on_front: ${data.page_on_front}`);
+        
+        return {
+            show_on_front: data.show_on_front,
+            page_on_front: Number(data.page_on_front),
+            page_for_posts: Number(data.page_for_posts),
+            options: data.options,
+            footer_form_html: data.footer_form_html,
+            custom_logo_url: data.custom_logo_url
+        };
+    } catch (error) {
+        console.error(`[getSettings] Network error:`, error);
         return {};
     }
-
-    const data = await res.json();
-    return {
-        show_on_front: data.show_on_front,
-        page_on_front: Number(data.page_on_front),
-        page_for_posts: Number(data.page_for_posts),
-        options: data.options,
-        footer_form_html: data.footer_form_html,
-        custom_logo_url: data.custom_logo_url
-    };
 }
 
 export async function getSite(lang: string = 'en') {
@@ -102,10 +111,27 @@ export async function getSite(lang: string = 'en') {
 
 
 export async function getPageById(id: number, lang: string = 'en') {
-    return fetch(`${WP}/wp-json/wp/v2/pages/${id}?lang=${lang}&_embed&acf_format=standard`, { 
-        cache: 'no-store',
-        next: { revalidate: 0 } 
-    } as RequestInit).then(r => r.json());
+    try {
+        const url = `${WP}/wp-json/wp/v2/pages/${id}?lang=${lang}&_embed&acf_format=standard`;
+        console.log(`[getPageById] Fetching: ${url}`);
+        
+        const res = await fetch(url, { 
+            cache: 'no-store',
+            next: { revalidate: 0 } 
+        } as RequestInit);
+        
+        if (!res.ok) {
+            console.error(`[getPageById] Failed: ${res.status} ${res.statusText}`);
+            return null;
+        }
+        
+        const data = await res.json();
+        console.log(`[getPageById] Success for ID ${id}, lang ${lang}`);
+        return data;
+    } catch (error) {
+        console.error(`[getPageById] Network error:`, error);
+        return null;
+    }
 }
 
 export async function getMedia(id: number) {
