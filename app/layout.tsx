@@ -8,9 +8,15 @@ import Footer from '../components/Footer';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Add metadata
+export const metadata = {
+  title: 'Bluerange',
+  description: 'Bluerange - Swedish Cloud Solutions',
+};
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="/understrap/css/theme.min.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.7/swiper-bundle.css" />

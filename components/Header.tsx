@@ -7,21 +7,61 @@ import { getMenu, getSite, getSettings, getLanguages } from '../lib/wp';
 const WP_HOST = 'https://dev-bluerange.pantheonsite.io';
 
 export default async function Header() {
-    const siteData = await getSite();
-    const settings = await getSettings();
-    const languages = await getLanguages();
-    let menuItems = await getMenu('primary');
+    let siteData: any = {};
+    let settings: any = {};
+    let languages: any[] = [];
+    let menuItems: any[] = [];
+
+    // Wrap all API calls in try-catch to prevent page crashes
+    try {
+        siteData = await getSite();
+    } catch (error) {
+        console.error('[Header] Failed to fetch site data:', error);
+    }
+
+    try {
+        settings = await getSettings();
+    } catch (error) {
+        console.error('[Header] Failed to fetch settings:', error);
+    }
+
+    try {
+        languages = await getLanguages();
+    } catch (error) {
+        console.error('[Header] Failed to fetch languages:', error);
+        // Fallback to default languages
+        languages = [
+            {
+                code: 'en',
+                name: 'English',
+                url: '/',
+                flag: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAIAAAD5gJpuAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFzSURBVHjaYvzPgAD/UNlYEUAAmuTYAAAAAElFTkSuQmCC'
+            },
+            {
+                code: 'sv',
+                name: 'Svenska',
+                url: '/sv',
+                flag: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAIAAAD5gJpuAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFXSURBVHjaYvzPgAD/UNlYEUAAmuTYAAAAAElFTkSuQmCC'
+            }
+        ];
+    }
+
+    try {
+        menuItems = await getMenu('primary');
+        
+        // Fetch Menu with Fallbacks
+        if (!menuItems || menuItems.length === 0) {
+            menuItems = await getMenu('primary-menu');
+        }
+        if (!menuItems || menuItems.length === 0) {
+            menuItems = await getMenu('main-menu');
+        }
+    } catch (error) {
+        console.error('[Header] Failed to fetch menu:', error);
+        menuItems = [];
+    }
 
     let logoUrl: string | null = null;
-
-    // 1. Try ACF Options (Preferred)
-    // if (settings?.options?.site_logo) {
-    //     if (typeof settings.options.site_logo === 'string') {
-    //         logoUrl = settings.options.site_logo;
-    //     } else if (settings.options.site_logo.url) {
-    //         logoUrl = settings.options.site_logo.url;
-    //     }
-    // }
 
     // 2. Try Site Settings (Legacy Endpoint)
     if (!logoUrl && settings?.custom_logo_url) {
@@ -35,14 +75,6 @@ export default async function Header() {
         if (potentialLogo && !potentialLogo.startsWith('data:image')) {
             logoUrl = potentialLogo;
         }
-    }
-
-    // Fetch Menu with Fallbacks
-    if (!menuItems || menuItems.length === 0) {
-        menuItems = await getMenu('primary-menu');
-    }
-    if (!menuItems || menuItems.length === 0) {
-        menuItems = await getMenu('main-menu');
     }
 
     // Fallback URL resolver

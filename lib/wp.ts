@@ -49,18 +49,39 @@ export const LANGUAGE_CONFIG: Record<SupportedLanguage, {
     }
 };
 
+// Timeout wrapper for fetch requests (10 second timeout)
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 10000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error(`Request timeout after ${timeout}ms`);
+        }
+        throw error;
+    }
+}
+
 export async function getSettings(lang: string = 'en') {
     try {
         const url = `${WP}/wp-json/headless/v1/site-settings?lang=${lang}`;
         console.log(`[getSettings] Fetching: ${url}`);
         
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
             cache: 'no-store',
             next: { revalidate: 0 },
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }
-        } as RequestInit);
+        } as RequestInit, 10000); // 10 second timeout
 
         if (!res.ok) {
             console.error(`[getSettings] Failed: ${res.status} ${res.statusText}`);
@@ -79,7 +100,7 @@ export async function getSettings(lang: string = 'en') {
             custom_logo_url: data.custom_logo_url
         };
     } catch (error) {
-        console.error(`[getSettings] Network error:`, error);
+        console.error(`[getSettings] Error:`, error);
         return {};
     }
 }
